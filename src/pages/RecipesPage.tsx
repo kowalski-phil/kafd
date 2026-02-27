@@ -38,11 +38,29 @@ export function RecipesPage() {
 
   const filtered = filterRecipes(recipes, filters)
 
+  const hasActiveFilters =
+    filters.search !== '' ||
+    filters.categories.length > 0 ||
+    filters.cookbookId !== null ||
+    filters.calorieMin !== null ||
+    filters.calorieMax !== null ||
+    filters.prepTimeMax !== null ||
+    filters.favoritesOnly
+
   return (
     <div className="min-h-screen">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-gray-50 px-4 pt-4 pb-2">
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">{t('nav.recipes')}</h1>
+        <div className="flex items-baseline justify-between mb-3">
+          <h1 className="text-2xl font-bold text-gray-800">{t('nav.recipes')}</h1>
+          {recipes.length > 0 && (
+            <span className="text-sm text-gray-400">
+              {hasActiveFilters
+                ? `${filtered.length} von ${recipes.length}`
+                : `${recipes.length}`} Rezepte
+            </span>
+          )}
+        </div>
 
         {/* Search */}
         <div className="relative mb-3">

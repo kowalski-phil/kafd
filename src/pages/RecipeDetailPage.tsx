@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus } from 'lucide-react'
+import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react'
 import { t } from '../i18n'
 import { getRecipe, toggleFavorite, deleteRecipe, updateRecipe } from '../api/recipes'
 import { uploadRecipePhoto } from '../api/storage'
@@ -24,6 +24,10 @@ export function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [servings, setServings] = useState(1)
+
+  // Menu state
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false)
@@ -190,6 +194,26 @@ export function RecipeDetailPage() {
     setNewPhotoPreview(URL.createObjectURL(file))
   }
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [menuOpen])
+
+  async function handleToggleExcluded() {
+    if (!recipe) return
+    await updateRecipe(recipe.id, { is_excluded: !recipe.is_excluded })
+    setRecipe({ ...recipe, is_excluded: !recipe.is_excluded })
+    setMenuOpen(false)
+  }
+
   async function handleToggleFavorite() {
     if (!recipe) return
     await toggleFavorite(recipe.id, recipe.is_favorite)
@@ -251,19 +275,46 @@ export function RecipeDetailPage() {
               <button onClick={() => navigate(-1)} className="p-2 -ml-2">
                 <ArrowLeft size={22} className="text-gray-700" />
               </button>
-              <div className="flex gap-2">
-                <button onClick={enterEditMode} className="p-2">
-                  <Pencil size={20} className="text-gray-400" />
-                </button>
+              <div className="flex gap-2 items-center">
                 <button onClick={handleToggleFavorite} className="p-2">
                   <Heart
                     size={22}
                     className={recipe.is_favorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}
                   />
                 </button>
-                <button onClick={handleDelete} className="p-2">
-                  <Trash2 size={22} className="text-gray-400" />
-                </button>
+                <div className="relative" ref={menuRef}>
+                  <button onClick={() => setMenuOpen(!menuOpen)} className="p-2">
+                    <MoreVertical size={22} className="text-gray-400" />
+                  </button>
+                  {menuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20">
+                      <button
+                        onClick={() => { setMenuOpen(false); enterEditMode() }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 active:bg-gray-50"
+                      >
+                        <Pencil size={16} className="text-gray-400" />
+                        {t('recipes.edit')}
+                      </button>
+                      <button
+                        onClick={handleToggleExcluded}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 active:bg-gray-50"
+                      >
+                        {recipe.is_excluded
+                          ? <><ThumbsUp size={16} className="text-green-500" /> Wieder vorschlagen</>
+                          : <><ThumbsDown size={16} className="text-gray-400" /> Nicht mehr vorschlagen</>
+                        }
+                      </button>
+                      <div className="border-t border-gray-100 my-1" />
+                      <button
+                        onClick={() => { setMenuOpen(false); handleDelete() }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-500 active:bg-gray-50"
+                      >
+                        <Trash2 size={16} />
+                        {t('recipes.delete')}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -524,6 +575,13 @@ export function RecipeDetailPage() {
         <div className="px-4 py-4">
           {/* Title */}
           <h1 className="text-2xl font-bold text-gray-800 mb-2">{recipe.title}</h1>
+
+          {/* Excluded badge */}
+          {recipe.is_excluded && (
+            <span className="inline-block px-2.5 py-0.5 bg-gray-100 text-gray-400 rounded-full text-xs font-medium mb-2">
+              Ausgeschlossen
+            </span>
+          )}
 
           {/* Cookbook + Page */}
           {recipe.cookbook && (

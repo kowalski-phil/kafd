@@ -7,6 +7,12 @@ Regeln:
 - Kategorisiere jede Zutat in eine dieser Kategorien: fruits_vegetables, meat_fish, dairy, dry_goods, spices, other
 - Erkenne Zeitangaben in Zubereitungsschritten und setze duration_seconds (z.B. "12 Minuten" → 720)
 - Wenn Kalorien oder Nährwerte auf dem Foto sichtbar sind, extrahiere sie
+- In deutschen Kochbüchern werden Nährwerte oft abgekürzt. Ordne sie IMMER korrekt zu:
+  - F = Fett (fat) → fat_g
+  - E = Eiweiß (protein) → protein_g
+  - KH = Kohlenhydrate (carbohydrates) → carbs_g
+  - kcal = Kalorien → calories
+  WICHTIG: F ist NIEMALS Protein, E ist NIEMALS Fett. Prüfe die Zuordnung doppelt!
 - Wenn die Portionsanzahl sichtbar ist, setze base_servings (sonst null)
 - Wenn die Zubereitungszeit sichtbar ist, setze prep_time_minutes (sonst null)
 - Mengenangaben immer als Zahl (z.B. 0.5 statt "½")

@@ -138,3 +138,46 @@ After user tests and confirms P0 fixes work on phone:
    - Depends on Phase 2 meal plan feature — may defer to Phase 2
 
 ---
+
+## 2026-02-27 — P1 Fixes (BUG-004, FEAT-001, FEAT-002)
+
+### What was done
+Completed all three P1 items from the backlog.
+
+#### BUG-004: AI parsing confuses F/E/KH macro abbreviations
+- Added explicit German nutritional abbreviation mapping to Claude parse prompt in `src/lib/parsePrompt.ts`
+- Mapping: `F = Fett → fat_g`, `E = Eiweiß → protein_g`, `KH = Kohlenhydrate → carbs_g`
+- Added emphatic "F is NEVER protein, E is NEVER fat" instruction with double-check reminder
+
+#### FEAT-001: Recipe count display with filter context
+- Added recipe count to `RecipesPage` header: shows total ("21 Rezepte") or filtered ("5 von 21 Rezepte")
+- Count appears right-aligned next to the page title
+- Detects active filters by comparing against defaults (search, categories, cookbook, calorie range, prep time, favorites)
+
+#### FEAT-002: Three-dot action menu on recipe detail
+- Replaced pencil + trash icons with a three-dot menu (⋯) using `MoreVertical` from lucide-react
+- Heart (favorite) stays as standalone icon
+- Menu items: Edit, Don't suggest anymore / Suggest again, Delete (with divider before delete)
+- "Don't suggest anymore" toggles `is_excluded` field via `updateRecipe()` API
+- Excluded recipes show "Ausgeschlossen" badge on detail page
+- Excluded recipes render at 50% opacity in recipe list (`RecipeCard`)
+- Menu closes on outside click
+
+### Build Verification
+- TypeScript type-check: **0 errors**
+- Vite production build: **success** (455 KB JS, 18 KB CSS gzipped)
+
+### Files Modified
+- `src/lib/parsePrompt.ts` — German macro abbreviation mapping (BUG-004)
+- `src/pages/RecipesPage.tsx` — recipe count with filter context (FEAT-001)
+- `src/pages/RecipeDetailPage.tsx` — three-dot menu, exclude toggle, excluded badge (FEAT-002)
+- `src/components/recipes/RecipeCard.tsx` — opacity for excluded recipes (FEAT-002)
+- `src/i18n/de.ts` — added recipe count translation keys
+- `airfryer-diet-backlog.md` — marked BUG-004, FEAT-001, FEAT-002 as done
+
+### Current Status
+- **All P1 items: DONE**
+- Remaining P1: FEAT-007 (meal prep portion scaling) — deferred to Phase 2
+- **Next step:** Phase 2 — Planning & Cooking
+
+---

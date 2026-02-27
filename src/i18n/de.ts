@@ -12,6 +12,8 @@ export const de = {
   'recipes.noResults': 'Keine Rezepte gefunden',
   'recipes.empty': 'Noch keine Rezepte vorhanden',
   'recipes.emptyHint': 'Füge dein erstes Rezept hinzu, indem du eine Kochbuchseite fotografierst.',
+  'recipes.countTotal': '{count} Rezepte',
+  'recipes.countFiltered': '{filtered} von {total} Rezepten',
   'recipes.calories': 'kcal',
   'recipes.minutes': 'Min.',
   'recipes.servings': 'Portionen',

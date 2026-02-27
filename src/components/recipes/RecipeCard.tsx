@@ -12,7 +12,7 @@ export function RecipeCard({ recipe, onClick }: RecipeCardProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors"
+      className={`w-full bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-left active:bg-gray-50 transition-colors ${recipe.is_excluded ? 'opacity-50' : ''}`}
     >
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">

@@ -49,7 +49,7 @@
 
 ---
 
-### BUG-004: AI parsing confuses F (Fett) and E (Eiweiß) abbreviations 🟠 P1
+### BUG-004: AI parsing confuses F (Fett) and E (Eiweiß) abbreviations ✅ FIXED
 **Description:** In German cookbooks, nutritional values are often abbreviated as F (Fett/fat), E (Eiweiß/protein), KH (Kohlenhydrate/carbs). The Claude API sometimes swaps F and E values.
 
 **Suggested fix:** Add explicit instruction to the Claude API parsing prompt:
@@ -66,7 +66,7 @@ Always map these abbreviations correctly. Double-check: F is NEVER protein, E is
 
 ## New Features
 
-### FEAT-001: Recipe count display with filter context 🟠 P1
+### FEAT-001: Recipe count display with filter context ✅ DONE
 **Description:** The recipe overview should display the total number of recipes. When filters are active, show the filtered count as a fraction of the total.
 
 **Example:** "5 of 21 recipes" when filtering for breakfast.
@@ -75,7 +75,7 @@ Always map these abbreviations correctly. Double-check: F is NEVER protein, E is
 
 ---
 
-### FEAT-002: Three-dot action menu on recipes 🟠 P1
+### FEAT-002: Three-dot action menu on recipes ✅ DONE
 **Description:** Replace the current icon row (heart + trash) with a cleaner pattern: keep the heart icon (favorite) visible, and move other actions into a three-dot menu (⋯).
 
 **Menu items:**
