@@ -1,4 +1,4 @@
-import type { Recipe, MealType, UserSettings, MealPlan } from './types'
+import type { Recipe, UserSettings, MealPlan } from './types'
 import { MEAL_TYPES } from './constants'
 import { toDateString } from './dateUtils'
 
@@ -26,17 +26,6 @@ export function getMealSlots(mealsPerDay: 3 | 4 | 5): typeof MEAL_TYPES[number][
   return MEAL_TYPES.slice(0, mealsPerDay)
 }
 
-/** Get the time budget for a given meal type from settings */
-function getTimeBudget(settings: UserSettings, mealType: MealType): number {
-  switch (mealType) {
-    case 'breakfast': return settings.time_budget_breakfast
-    case 'lunch': return settings.time_budget_lunch
-    case 'dinner': return settings.time_budget_dinner
-    case 'snack_1':
-    case 'snack_2': return settings.time_budget_snack
-  }
-}
-
 /** Weighted random pick from an array of { item, weight } */
 function weightedPick<T>(items: { item: T; weight: number }[]): T | null {
   if (items.length === 0) return null
@@ -50,7 +39,7 @@ function weightedPick<T>(items: { item: T; weight: number }[]): T | null {
 }
 
 /** Get the category tag that matches a meal type */
-function mealTypeToCategory(mealType: MealType): string {
+function mealTypeToCategory(mealType: string): string {
   if (mealType === 'snack_1' || mealType === 'snack_2') return 'snack'
   return mealType
 }
@@ -78,7 +67,6 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
     }
   }
   log.push(`Recipe tags: ${[...catCounts.entries()].map(([k, v]) => `${k}=${v}`).join(', ')}`)
-  log.push(`Time budgets: breakfast=${settings.time_budget_breakfast}, lunch=${settings.time_budget_lunch}, dinner=${settings.time_budget_dinner}, snack=${settings.time_budget_snack}`)
 
   // Track how many times each recipe is used across the week
   const weekUsage = new Map<string, number>()
@@ -110,21 +98,17 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
       }
 
       const category = mealTypeToCategory(slot.value)
-      const timeBudget = getTimeBudget(settings, slot.value)
 
-      // Filter eligible recipes with detailed tracking
-      const withCategory = recipes.filter((r) => !r.is_excluded && r.category_tags.includes(category as Recipe['category_tags'][number]))
-      const withinTime = withCategory.filter((r) => r.prep_time_minutes == null || r.prep_time_minutes <= timeBudget)
-      const withinUsage = withinTime.filter((r) => (weekUsage.get(r.id) ?? 0) < 2)
-
-      const eligible = withinUsage
+      // Filter: matching category, not excluded, not used 2x this week
+      const eligible = recipes.filter((r) => {
+        if (r.is_excluded) return false
+        if (!r.category_tags.includes(category as Recipe['category_tags'][number])) return false
+        if ((weekUsage.get(r.id) ?? 0) >= 2) return false
+        return true
+      })
 
       if (eligible.length === 0) {
-        log.push(`${dateStr} ${slot.value}: EMPTY — cat="${category}" match=${withCategory.length}, time≤${timeBudget}min=${withinTime.length}, usage<2=${withinUsage.length}`)
-        if (withCategory.length > 0 && withinTime.length === 0) {
-          const times = withCategory.map(r => `"${r.title}"=${r.prep_time_minutes ?? 'null'}min`)
-          log.push(`  → Time filter killed all: ${times.join(', ')}`)
-        }
+        log.push(`${dateStr} ${slot.value}: EMPTY — cat="${category}" has ${recipes.filter(r => !r.is_excluded && r.category_tags.includes(category as Recipe['category_tags'][number])).length} recipes but all used 2x`)
       }
 
       const weighted = eligible.map((r) => ({
@@ -149,7 +133,7 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
 
       if (picked) {
         weekUsage.set(picked.id, (weekUsage.get(picked.id) ?? 0) + 1)
-        log.push(`${dateStr} ${slot.value}: "${picked.title}" (${picked.calories}kcal, ${picked.prep_time_minutes}min)`)
+        log.push(`${dateStr} ${slot.value}: "${picked.title}" (${picked.calories ?? '?'}kcal, ${picked.prep_time_minutes ?? '?'}min)`)
       } else {
         log.push(`${dateStr} ${slot.value}: NO RECIPE FOUND`)
       }
@@ -185,9 +169,7 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
         if (maxCalIdx === -1) break
 
         const planToSwap = dayPlans[maxCalIdx]
-        const slot = slots.find((s) => s.value === planToSwap.meal_type)!
-        const category = mealTypeToCategory(slot.value)
-        const timeBudget = getTimeBudget(settings, slot.value)
+        const category = mealTypeToCategory(planToSwap.meal_type)
 
         const otherCalories = dayPlans.reduce((sum, p, i) => {
           if (i === maxCalIdx || !p.recipe_id) return sum
@@ -200,7 +182,6 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
         const alternatives = recipes.filter((r) => {
           if (r.is_excluded || r.calories == null) return false
           if (!r.category_tags.includes(category as Recipe['category_tags'][number])) return false
-          if (r.prep_time_minutes != null && r.prep_time_minutes > timeBudget) return false
           if ((weekUsage.get(r.id) ?? 0) >= 2) return false
           if (r.id === planToSwap.recipe_id) return false
           return true

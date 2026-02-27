@@ -106,35 +106,6 @@ export function SettingsForm() {
         </div>
       </div>
 
-      {/* Time Budgets */}
-      <div>
-        <label className="text-sm font-medium text-gray-700 mb-2 block">
-          {t('settings.timeBudgets')}
-        </label>
-        <div className="space-y-2">
-          {[
-            { key: 'time_budget_breakfast' as const, label: t('settings.timeBudgetBreakfast') },
-            { key: 'time_budget_lunch' as const, label: t('settings.timeBudgetLunch') },
-            { key: 'time_budget_dinner' as const, label: t('settings.timeBudgetDinner') },
-            { key: 'time_budget_snack' as const, label: t('settings.timeBudgetSnack') },
-          ].map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 w-28">{label}</span>
-              <input
-                type="number"
-                value={form[key]}
-                onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
-                className={inputClass}
-                min={5}
-                max={120}
-                step={5}
-              />
-              <span className="text-sm text-gray-500 whitespace-nowrap">{t('settings.minutes')}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Weight */}
       <div className="grid grid-cols-2 gap-4">
         <div>

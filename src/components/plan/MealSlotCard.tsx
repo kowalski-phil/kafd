@@ -1,4 +1,4 @@
-import { Check, Utensils } from 'lucide-react'
+import { Check, Clock, Utensils } from 'lucide-react'
 import type { MealPlanWithRecipe } from '../../lib/types'
 import { MEAL_TYPES } from '../../lib/constants'
 import { t } from '../../i18n'
@@ -75,7 +75,12 @@ export function MealSlotCard({ plan, onTap }: MealSlotCardProps) {
       </div>
       <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-400">
         {plan.recipe.calories && <span>{plan.recipe.calories} kcal</span>}
-        {plan.recipe.prep_time_minutes && <span>{plan.recipe.prep_time_minutes} Min.</span>}
+        {plan.recipe.prep_time_minutes && (
+          <span className="flex items-center gap-0.5 font-semibold text-gray-500">
+            <Clock size={9} />
+            {plan.recipe.prep_time_minutes} Min.
+          </span>
+        )}
       </div>
     </button>
   )
