@@ -181,3 +181,65 @@ Completed all three P1 items from the backlog.
 - **Next step:** Phase 2 — Planning & Cooking
 
 ---
+
+## 2026-02-27 — Phase 2 Implementation Complete
+
+### What was done
+All 7 work chunks of Phase 2 (Planning & Cooking) implemented:
+
+1. **Database Migration** — `supabase/migrations/002_phase2_schema.sql` with 3 new tables: `user_settings` (single-row, calorie target, meals/day, time budgets, pantry staples), `meal_plans` (date+meal_type UNIQUE, recipe FK, completion tracking, free meals), `weight_log` (date UNIQUE). All with RLS, indexes, updated_at triggers.
+
+2. **Types + API Layer + i18n** — Added `MealType`, `UserSettings`, `MealPlan`, `MealPlanWithRecipe`, `WeightLogEntry` types. `MEAL_TYPES` constant with German labels. 3 new API modules (`userSettings.ts`, `mealPlans.ts`, `weightLog.ts`). ~50 new German i18n keys for settings, plan, today, and cooking views.
+
+3. **User Settings (Profile Page)** — Replaced placeholder with full settings form: daily calorie target, meals/day (3-button selector), per-meal time budgets, start/target weight, pantry staples tag input. Upsert pattern (single row).
+
+4. **Meal Plan Generator** — Pure function in `mealPlanGenerator.ts`: determines meal slots from meals_per_day, filters recipes by category + time budget, weighted random selection (favorites 3x weight), max 2x same recipe/week, calorie balancing within ±10% of target (up to 5 swap attempts). Date utilities in `dateUtils.ts`.
+
+5. **Plan Page (Week View)** — Horizontal scroll of 7 day columns with meal cards. Week navigation (prev/next). "Plan erstellen" / "Woche neu planen" button. Tap meal → action modal (Cook Now, Mark Complete, Free Meal, Swap). Swap modal lists filtered recipes. Free meal modal with calorie + note input.
+
+6. **Today Page (Day View)** — Calorie summary with progress bar (consumed/remaining/target). Meal cards with recipe photo, title, calories, prep time. "Jetzt kochen" button, mark eaten, free meal options. Links to plan if no meals for today. Changed default route from `/recipes` to `/today`.
+
+7. **Cooking Mode** — Full-screen route `/cook/:id` outside AppLayout (no tab bar). 4-phase wizard: Overview (servings selector) → Ingredient checklist (tap-to-check) → Step-by-step (with progress dots) → Done (mark complete if from plan). Wake Lock API. Per-step countdown timer with Web Audio beep. Large fonts (18px body, 24px headings). Previous/Next button navigation.
+
+### V1 Simplifications
+- Servings always 1 (no calorie-based serving adjustment in generator)
+- No meal prep logic (schema supports it, UI doesn't surface it)
+- No drag & drop in week view (swap via modal instead)
+- Button navigation in cooking mode (no swipe gestures)
+
+### Build Verification
+- TypeScript type-check: **0 errors**
+- Vite production build: **success** (498 KB JS, 24 KB CSS gzipped)
+- PWA: Service worker generated with 5 precached entries
+
+### Files Created (21 new files)
+```
+supabase/migrations/002_phase2_schema.sql
+src/api/userSettings.ts, mealPlans.ts, weightLog.ts
+src/lib/mealPlanGenerator.ts, dateUtils.ts
+src/hooks/useWakeLock.ts, useTimer.ts
+src/components/settings/SettingsForm.tsx, PantryStaplesInput.tsx
+src/components/plan/WeekView.tsx, DayColumn.tsx, MealSlotCard.tsx, SwapMealModal.tsx
+src/components/today/CalorieSummary.tsx, MealCard.tsx, FreeMealModal.tsx
+src/components/cooking/CookingOverview.tsx, IngredientChecklist.tsx, StepByStep.tsx, CookingTimer.tsx, CookingDone.tsx
+src/pages/CookingModePage.tsx
+```
+
+### Files Modified (7 files)
+```
+src/lib/types.ts — Phase 2 types (MealType, UserSettings, MealPlan, etc.)
+src/lib/constants.ts — MEAL_TYPES, DEFAULT_USER_SETTINGS
+src/i18n/de.ts — ~50 new German translation keys
+src/App.tsx — /cook/:id route outside AppLayout, default route → /today
+src/pages/ProfilePage.tsx — replaced placeholder with SettingsForm
+src/pages/PlanPage.tsx — full week view implementation
+src/pages/TodayPage.tsx — full day view implementation
+```
+
+### Current Status
+- **Phase 2: CODE COMPLETE** — 0 TS errors, builds successfully
+- **User still needs to:** Run migration `002_phase2_schema.sql` in Supabase dashboard
+- **After migration:** Test settings save, plan generation, today view, cooking mode on phone
+- **Next step:** Phase 3 — Shopping & Tracking (shopping list generation, weight tracking, streak counter)
+
+---

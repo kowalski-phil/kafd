@@ -7,13 +7,17 @@ import { AddRecipePage } from './pages/AddRecipePage'
 import { PlanPage } from './pages/PlanPage'
 import { ShoppingPage } from './pages/ShoppingPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { CookingModePage } from './pages/CookingModePage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Cooking mode — outside AppLayout (no tab bar) */}
+        <Route path="/cook/:id" element={<CookingModePage />} />
+
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/recipes" replace />} />
+          <Route path="/" element={<Navigate to="/today" replace />} />
           <Route path="/today" element={<TodayPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/:id" element={<RecipeDetailPage />} />

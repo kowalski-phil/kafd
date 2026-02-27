@@ -1,12 +1,15 @@
-import { Settings } from 'lucide-react'
 import { t } from '../i18n'
+import { SettingsForm } from '../components/settings/SettingsForm'
 
 export function ProfilePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
-      <Settings size={48} className="text-gray-300 mb-4" />
-      <h1 className="text-xl font-semibold text-gray-700 mb-2">{t('nav.profile')}</h1>
-      <p className="text-gray-400 text-sm">{t('profile.placeholder')}</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="sticky top-0 z-10 bg-gray-50 border-b border-gray-100 px-4 h-14 flex items-center">
+        <h1 className="text-xl font-bold text-gray-800">{t('settings.title')}</h1>
+      </div>
+      <div className="px-4 py-4">
+        <SettingsForm />
+      </div>
     </div>
   )
 }

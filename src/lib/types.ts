@@ -73,3 +73,49 @@ export interface ClaudeParseResult {
   prep_time_minutes: number | null
   base_servings: number | null
 }
+
+// Phase 2 types
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack_1' | 'snack_2'
+
+export interface UserSettings {
+  id: string
+  daily_calorie_target: number
+  meals_per_day: 3 | 4 | 5
+  time_budget_breakfast: number
+  time_budget_lunch: number
+  time_budget_dinner: number
+  time_budget_snack: number
+  start_weight_kg: number | null
+  target_weight_kg: number | null
+  pantry_staples: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface MealPlan {
+  id: string
+  date: string
+  meal_type: MealType
+  recipe_id: string | null
+  servings: number
+  is_completed: boolean
+  is_free_meal: boolean
+  free_meal_calories: number | null
+  free_meal_note: string | null
+  is_meal_prep: boolean
+  meal_prep_source_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface MealPlanWithRecipe extends MealPlan {
+  recipe?: Recipe | null
+}
+
+export interface WeightLogEntry {
+  id: string
+  date: string
+  weight_kg: number
+  created_at: string
+}
