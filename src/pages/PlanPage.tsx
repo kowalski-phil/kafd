@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, RefreshCw, Settings } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, RefreshCw, Settings, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { t } from '../i18n'
 import type { MealPlanWithRecipe, UserSettings } from '../lib/types'
 import { getUserSettings } from '../api/userSettings'
-import { getMealPlansForDateRange, upsertMealPlans, updateMealPlan, completeMealPlan, markFreeMeal } from '../api/mealPlans'
+import { getMealPlansForDateRange, upsertMealPlans, updateMealPlan, completeMealPlan, markFreeMeal, deleteMealPlansForDateRange } from '../api/mealPlans'
 import { getRecipes } from '../api/recipes'
 import { generateMealPlan } from '../lib/mealPlanGenerator'
 import { getWeekStart, getWeekDates, toDateString, formatDateRange, offsetWeek } from '../lib/dateUtils'
@@ -50,6 +50,7 @@ export function PlanPage() {
     setGenerating(true)
     try {
       const recipes = await getRecipes()
+      console.log(`[PlanPage] Generating plan: ${recipes.length} recipes, meals_per_day=${settings.meals_per_day}, dates=${weekDates.map(d => toDateString(d)).join(',')}`)
       const completedPlans = plans.filter((p) => p.is_completed)
       const generated = generateMealPlan({
         recipes,
@@ -57,12 +58,23 @@ export function PlanPage() {
         dates: weekDates,
         existingCompleted: completedPlans,
       })
-      await upsertMealPlans(generated)
+      console.log(`[PlanPage] Generated ${generated.length} meal slots:`, generated.map(g => `${g.date} ${g.meal_type}: ${g.recipe_id ? 'recipe' : 'EMPTY'}`))
+      const saved = await upsertMealPlans(generated)
+      console.log(`[PlanPage] Upserted ${saved.length} rows to DB`)
+      await loadData()
+    } catch (err) {
+      console.error('[PlanPage] Generate error:', err)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  async function handleDeleteWeek() {
+    try {
+      await deleteMealPlansForDateRange(startStr, endStr, false)
       await loadData()
     } catch (err) {
       console.error(err)
-    } finally {
-      setGenerating(false)
     }
   }
 
@@ -148,12 +160,12 @@ export function PlanPage() {
         </button>
       </div>
 
-      {/* Generate / Regenerate button */}
-      <div className="px-4 py-3">
+      {/* Generate / Regenerate + Delete buttons */}
+      <div className="px-4 py-3 flex gap-2">
         <button
           onClick={handleGenerate}
           disabled={generating}
-          className="w-full py-2.5 bg-orange-500 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {generating ? (
             <>
@@ -169,6 +181,15 @@ export function PlanPage() {
             t('plan.generate')
           )}
         </button>
+        {plans.length > 0 && (
+          <button
+            onClick={() => { if (confirm(t('plan.deleteConfirm'))) handleDeleteWeek() }}
+            className="py-2.5 px-3 bg-red-50 text-red-500 rounded-xl text-sm"
+            title={t('plan.deleteWeek')}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
       {/* Week View */}

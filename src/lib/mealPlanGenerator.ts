@@ -89,13 +89,16 @@ export function generateMealPlan({ recipes, settings, dates, existingCompleted =
       // Filter eligible recipes
       const eligible = recipes.filter((r) => {
         if (r.is_excluded) return false
-        if (r.calories == null) return false
         if (!r.category_tags.includes(category as Recipe['category_tags'][number])) return false
         if (r.prep_time_minutes != null && r.prep_time_minutes > timeBudget) return false
         // Max 2x same recipe per week
         if ((weekUsage.get(r.id) ?? 0) >= 2) return false
         return true
       })
+
+      if (eligible.length === 0) {
+        console.warn(`[MealPlan] No eligible recipes for ${dateStr} ${slot.value} (category=${category}, timeBudget=${timeBudget}min). Total recipes with this category: ${recipes.filter(r => !r.is_excluded && r.category_tags.includes(category as Recipe['category_tags'][number])).length}`)
+      }
 
       const weighted = eligible.map((r) => ({
         item: r,

@@ -110,6 +110,8 @@ export const de = {
   'plan.completed': 'Erledigt',
   'plan.noRecipes': 'Nicht genug Rezepte für die Planung.',
   'plan.kcalDay': 'kcal/Tag',
+  'plan.deleteWeek': 'Plan löschen',
+  'plan.deleteConfirm': 'Gesamten Wochenplan löschen?',
 
   // Today
   'today.title': 'Heute',
