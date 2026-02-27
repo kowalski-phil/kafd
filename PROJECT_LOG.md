@@ -115,7 +115,26 @@ Fixed all three P0 bugs from the backlog before continuing recipe capture.
 - `airfryer-diet-backlog.md` — added FEAT-008
 
 ### Current Status
-- **P0 bugs: ALL FIXED**
-- **Next step:** User testing, then P1 items (BUG-004, FEAT-001, FEAT-002, FEAT-007)
+- **P0 bugs: ALL FIXED** — committed as `db81b70`, pushed to main, Vercel auto-deploys
+- **21 recipes captured** out of 30-50 target — user testing P0 fixes before capturing more
+- **Backlog file:** `airfryer-diet-backlog.md` — tracks all bugs and features with priorities
+
+### Next Development Cycle (P1 items)
+After user tests and confirms P0 fixes work on phone:
+
+1. **BUG-004** (P1): AI parsing confuses F (Fett) and E (Eiweiß) abbreviations
+   - Fix: Add explicit German macro abbreviation mapping to Claude prompt in `src/lib/parsePrompt.ts`
+   - `F = Fett → fat_g`, `E = Eiweiß → protein_g`, `KH = Kohlenhydrate → carbs_g`
+
+2. **FEAT-001** (P1): Recipe count display with filter context
+   - Show "5 von 21 Rezepten" on `RecipesPage` when filters are active
+
+3. **FEAT-002** (P1): Three-dot action menu on recipe detail
+   - Replace trash icon with ⋯ menu containing: Edit, Don't suggest anymore, Delete
+   - Wire up `is_excluded` toggle (field already exists in DB schema + TypeScript types, just not exposed in UI)
+   - Keep heart (favorite) as standalone icon
+
+4. **FEAT-007** (P1): Meal prep — portion scaling choice
+   - Depends on Phase 2 meal plan feature — may defer to Phase 2
 
 ---
