@@ -65,14 +65,57 @@ src/pages/TodayPage.tsx, RecipesPage.tsx, RecipeDetailPage.tsx, AddRecipePage.ts
 ```
 
 ### Current Status
-- **Phase:** Phase 1 complete (code written, builds successfully)
-- **Before first deploy, user needs to:**
-  1. Create a Supabase project and run the SQL migration
-  2. Create the `recipe-photos` storage bucket in Supabase (public, 10MB limit)
-  3. Get an Anthropic API key
-  4. Fill in `.env.local` with real values
-  5. Create a GitHub repo, push code, connect to Vercel
-  6. Set env vars in Vercel dashboard
-- **Next step:** User setup of Supabase + Vercel, then test on phone
+- **Phase 1: FULLY DEPLOYED AND TESTED**
+- Supabase project created, schema deployed, storage bucket configured
+- Claude Vision API routed through OpenRouter (user had no Anthropic credits)
+- GitHub repo: https://github.com/kowalski-phil/kafd
+- Deployed to Vercel (auto-deploys on push)
+- Tested on phone: camera capture, Claude parsing, recipe editing, and saving all work
+- **Next step:** Phase 2 — Planning & Cooking
+
+---
+
+## 2026-02-27 — P0 Bug Fixes (BUG-001, BUG-002, BUG-003)
+
+### What was done
+Fixed all three P0 bugs from the backlog before continuing recipe capture.
+
+#### BUG-001: Decimal number input (German locale)
+- Changed ingredient amount inputs from `<input type="number">` to `<input type="text" inputmode="decimal">` in `AddRecipePage.tsx` and `RecipeDetailPage.tsx`
+- Same fix applied to macro inputs (protein, carbs, fat)
+- Added `parseDecimal()` helper: normalizes German comma → dot on save
+- Raw string kept in parallel state during editing for smooth typing, parsed to number on save
+- Stored data type remains `number` — serving math and calculations unaffected
+- Integer-only fields (page number, servings, prep time, calories) left as `type="number"`
+
+#### BUG-002: Recipes not editable after saving
+- Added full edit mode to `RecipeDetailPage.tsx` with `isEditing` state toggle
+- Edit button (pencil icon) added to header alongside heart + trash
+- In edit mode: header shows Cancel (left) + Save (right)
+- All fields editable: title, cookbook, page number, category tags, servings, prep time, calories, macros, ingredients (add/remove/edit), steps (add/remove/edit)
+- Reuses existing components: `CookbookSelect`, `CategoryTagSelect`
+- Save calls existing `updateRecipe()` API function, then reloads recipe data
+
+#### BUG-003: Recipe photos not replaceable
+- In edit mode, photo area shows "Foto" (camera) and "Galerie" (file picker) buttons overlaid on the image
+- New photo preview shown immediately via `URL.createObjectURL()`
+- On save, new photo uploaded to Supabase storage via existing `uploadRecipePhoto()`
+- Old photos remain in storage (cleanup tracked as FEAT-008 in backlog)
+
+### Backlog update
+- Added FEAT-008 (P3): Storage cleanup for replaced recipe photos
+
+### Build Verification
+- TypeScript type-check: **0 errors**
+- Vite production build: **success** (453 KB JS, 18 KB CSS gzipped)
+
+### Files Modified
+- `src/pages/AddRecipePage.tsx` — decimal input fix (BUG-001)
+- `src/pages/RecipeDetailPage.tsx` — full rewrite with edit mode + photo replacement (BUG-002 + BUG-003)
+- `airfryer-diet-backlog.md` — added FEAT-008
+
+### Current Status
+- **P0 bugs: ALL FIXED**
+- **Next step:** User testing, then P1 items (BUG-004, FEAT-001, FEAT-002, FEAT-007)
 
 ---

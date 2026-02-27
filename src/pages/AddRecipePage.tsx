@@ -12,6 +12,11 @@ import { createRecipe } from '../api/recipes'
 import { INGREDIENT_CATEGORIES } from '../lib/constants'
 import type { ClaudeParseResult, Ingredient, RecipeStep, CategoryTag, IngredientCategory } from '../lib/types'
 
+/** Normalize German decimal comma to dot and parse as float */
+function parseDecimal(value: string): number {
+  return parseFloat(value.replace(',', '.')) || 0
+}
+
 type Step = 'capture' | 'parsing' | 'edit' | 'saving'
 
 export function AddRecipePage() {
@@ -35,6 +40,8 @@ export function AddRecipePage() {
   const [carbsG, setCarbsG] = useState<string>('')
   const [fatG, setFatG] = useState<string>('')
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  // Raw string amounts for decimal input (parallel to ingredients array)
+  const [ingredientAmounts, setIngredientAmounts] = useState<string[]>([])
   const [steps, setSteps] = useState<RecipeStep[]>([])
 
   async function handleCapture(file: File) {
@@ -57,7 +64,9 @@ export function AddRecipePage() {
 
   function applyParseResult(result: ClaudeParseResult) {
     setTitle(result.title || '')
-    setIngredients(result.ingredients || [])
+    const ings = result.ingredients || []
+    setIngredients(ings)
+    setIngredientAmounts(ings.map((ing) => ing.amount ? String(ing.amount) : ''))
     setSteps(result.steps || [])
     if (result.calories != null) setCalories(result.calories.toString())
     if (result.protein_g != null) setProteinG(result.protein_g.toString())
@@ -72,6 +81,7 @@ export function AddRecipePage() {
       ...ingredients,
       { name: '', amount: 0, unit: 'g', category: 'other' as IngredientCategory },
     ])
+    setIngredientAmounts([...ingredientAmounts, ''])
   }
 
   function updateIngredient(index: number, updates: Partial<Ingredient>) {
@@ -80,6 +90,7 @@ export function AddRecipePage() {
 
   function removeIngredient(index: number) {
     setIngredients(ingredients.filter((_, i) => i !== index))
+    setIngredientAmounts(ingredientAmounts.filter((_, i) => i !== index))
   }
 
   function addStep() {
@@ -111,16 +122,22 @@ export function AddRecipePage() {
         photoUrl = await uploadRecipePhoto(photoFile)
       }
 
+      // Normalize ingredient amounts from raw string inputs
+      const normalizedIngredients = ingredients.map((ing, i) => ({
+        ...ing,
+        amount: parseDecimal(ingredientAmounts[i] ?? String(ing.amount)),
+      }))
+
       const recipe = await createRecipe({
         title: title.trim(),
         cookbook_id: cookbookId,
         page_number: pageNumber ? parseInt(pageNumber) : null,
-        ingredients,
+        ingredients: normalizedIngredients,
         steps,
         calories: calories ? parseInt(calories) : null,
-        protein_g: proteinG ? parseFloat(proteinG) : null,
-        carbs_g: carbsG ? parseFloat(carbsG) : null,
-        fat_g: fatG ? parseFloat(fatG) : null,
+        protein_g: proteinG ? parseDecimal(proteinG) : null,
+        carbs_g: carbsG ? parseDecimal(carbsG) : null,
+        fat_g: fatG ? parseDecimal(fatG) : null,
         prep_time_minutes: prepTime ? parseInt(prepTime) : null,
         base_servings: parseInt(baseServings) || 1,
         category_tags: categoryTags,
@@ -245,8 +262,8 @@ export function AddRecipePage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Protein (g)</label>
               <input
-                type="number"
-                step="0.1"
+                type="text"
+                inputMode="decimal"
                 value={proteinG}
                 onChange={(e) => setProteinG(e.target.value)}
                 className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -255,8 +272,8 @@ export function AddRecipePage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Kohlenhydrate (g)</label>
               <input
-                type="number"
-                step="0.1"
+                type="text"
+                inputMode="decimal"
                 value={carbsG}
                 onChange={(e) => setCarbsG(e.target.value)}
                 className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -265,8 +282,8 @@ export function AddRecipePage() {
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Fett (g)</label>
               <input
-                type="number"
-                step="0.1"
+                type="text"
+                inputMode="decimal"
                 value={fatG}
                 onChange={(e) => setFatG(e.target.value)}
                 className="w-full px-3 py-2.5 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -290,10 +307,14 @@ export function AddRecipePage() {
               {ingredients.map((ing, i) => (
                 <div key={i} className="flex gap-2 items-start">
                   <input
-                    type="number"
-                    step="any"
-                    value={ing.amount || ''}
-                    onChange={(e) => updateIngredient(i, { amount: parseFloat(e.target.value) || 0 })}
+                    type="text"
+                    inputMode="decimal"
+                    value={ingredientAmounts[i] ?? ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setIngredientAmounts(ingredientAmounts.map((a, j) => j === i ? val : a))
+                      updateIngredient(i, { amount: parseDecimal(val) })
+                    }}
                     placeholder="Menge"
                     className="w-16 px-2 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
