@@ -56,8 +56,8 @@ export function RecipesPage() {
           {recipes.length > 0 && (
             <span className="text-sm text-gray-400">
               {hasActiveFilters
-                ? `${filtered.length} von ${recipes.length}`
-                : `${recipes.length}`} Rezepte
+                ? `${filtered.length} von ${recipes.length} Rezepten`
+                : `${recipes.length} Rezepte`}
             </span>
           )}
         </div>
