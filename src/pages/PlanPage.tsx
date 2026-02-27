@@ -22,6 +22,8 @@ export function PlanPage() {
   const [freeMealTarget, setFreeMealTarget] = useState<MealPlanWithRecipe | null>(null)
   const [freeMealCal, setFreeMealCal] = useState('')
   const [freeMealNote, setFreeMealNote] = useState('')
+  const [debugLog, setDebugLog] = useState<string[]>([])
+  const [showDebug, setShowDebug] = useState(false)
 
   const weekDates = getWeekDates(weekStart)
   const startStr = toDateString(weekDates[0])
@@ -50,17 +52,17 @@ export function PlanPage() {
     setGenerating(true)
     try {
       const recipes = await getRecipes()
-      console.log(`[PlanPage] Generating plan: ${recipes.length} recipes, meals_per_day=${settings.meals_per_day}, dates=${weekDates.map(d => toDateString(d)).join(',')}`)
       const completedPlans = plans.filter((p) => p.is_completed)
-      const generated = generateMealPlan({
+      const { plans: generated, debugLog: log } = generateMealPlan({
         recipes,
         settings,
         dates: weekDates,
         existingCompleted: completedPlans,
       })
-      console.log(`[PlanPage] Generated ${generated.length} meal slots:`, generated.map(g => `${g.date} ${g.meal_type}: ${g.recipe_id ? 'recipe' : 'EMPTY'}`))
+      setDebugLog(log)
+      setShowDebug(true)
       const saved = await upsertMealPlans(generated)
-      console.log(`[PlanPage] Upserted ${saved.length} rows to DB`)
+      log.push(`DB upsert: sent ${generated.length}, saved ${saved.length}`)
       await loadData()
     } catch (err) {
       console.error('[PlanPage] Generate error:', err)
@@ -212,6 +214,21 @@ export function PlanPage() {
           onCook={handleCook}
           onClose={() => setSelectedPlan(null)}
         />
+      )}
+
+      {/* Debug Log Panel */}
+      {showDebug && debugLog.length > 0 && (
+        <div className="mx-4 mb-4 bg-gray-900 text-green-400 rounded-xl p-3 text-xs font-mono overflow-x-auto max-h-[50vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-yellow-400 font-bold">DEBUG LOG</span>
+            <button onClick={() => setShowDebug(false)} className="text-gray-500 text-xs">hide</button>
+          </div>
+          {debugLog.map((line, i) => (
+            <div key={i} className={`${line.includes('EMPTY') || line.includes('NO RECIPE') ? 'text-red-400' : line.includes('KEPT') ? 'text-blue-400' : ''} whitespace-pre-wrap`}>
+              {line}
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Free Meal Modal */}
