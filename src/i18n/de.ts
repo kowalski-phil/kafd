@@ -142,4 +142,24 @@ export const de = {
 
   // Placeholder pages
   'shopping.placeholder': 'Die Einkaufsliste wird in Phase 3 verfügbar sein.',
+
+  // Profile
+  'profile.title': 'Profil',
+
+  // Weight log
+  'weight.title': 'Gewicht',
+  'weight.noData': 'Mindestens 2 Einträge für Diagramm nötig',
+  'weight.recent': 'Letzte Einträge',
+  'weight.weight': 'Gewicht',
+  'weight.target': 'Ziel',
+  'weight.start': 'Start',
+
+  // Calorie history
+  'calories.title': 'Kalorien-Verlauf',
+  'calories.days': 'Tage',
+  'calories.consumed': 'Gegessen',
+  'calories.target': 'Ziel',
+  'calories.avgPerDay': 'Ø kcal/Tag',
+  'calories.daysUnder': 'Tage im Ziel',
+  'calories.daysOver': 'Tage drüber',
 } as const

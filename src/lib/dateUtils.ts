@@ -58,3 +58,16 @@ export function offsetWeek(date: Date, offset: number): Date {
   d.setDate(d.getDate() + offset * 7)
   return d
 }
+
+/** Subtract N days from a date */
+export function subDays(date: Date, n: number): Date {
+  const d = new Date(date)
+  d.setDate(d.getDate() - n)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+/** Format date as "DD.MM." (short German, no day name) */
+export function formatDayMonth(date: Date): string {
+  return `${date.getDate()}.${date.getMonth() + 1}.`
+}

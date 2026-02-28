@@ -243,3 +243,99 @@ src/pages/TodayPage.tsx — full day view implementation
 - **Next step:** Phase 3 — Shopping & Tracking (shopping list generation, weight tracking, streak counter)
 
 ---
+
+## 2026-02-27 — Phase 2 Post-Deploy Fixes
+
+### Bug: Meal plan generator producing mostly empty slots
+**Root cause:** Time budget filter was too strict. Default breakfast=15min, snack=10min, but all breakfast recipes are 20+ min and all snack recipes are 20+ min. The time filter eliminated 100% of breakfast/snack recipes. Additionally, lunch/dinner only had 3 recipes within 30min, and the 2x/week usage cap exhausted them by day 4.
+
+**Fix applied (3 iterations):**
+1. Added detailed debug log panel to PlanPage (dark terminal-style panel, shows per-slot filter breakdown)
+2. Removed `calories == null` hard filter (recipes without calories can now be planned)
+3. Added soft fallback: if time filter kills all recipes, ignore time and pick from all matching-category recipes
+4. **Final decision:** Removed time budget filtering entirely from the generator. Time budgets removed from settings UI. Prep time is shown prominently on meal cards so the user can decide themselves whether they have time.
+
+**Rationale:** Air fryer recipes inherently take 20-90min. A time budget filter doesn't match the recipe pool. Better UX: show prep time on cards, let the user swap manually if short on time.
+
+### Feature: Delete week plan button
+Added red trash icon button on PlanPage next to the regenerate button. Confirms with "Gesamten Wochenplan löschen?" dialog, then deletes all meal plans for the displayed week.
+
+### Files Modified
+- `src/lib/mealPlanGenerator.ts` — removed time budget filtering, added debug log return type (`GeneratorResult`), simplified to category + usage filters only
+- `src/lib/constants.ts` — raised default time budgets (now unused by generator but kept in DB)
+- `src/components/settings/SettingsForm.tsx` — removed time budget input fields from UI
+- `src/pages/PlanPage.tsx` — added delete week button, debug log panel, updated to use `GeneratorResult`
+- `src/components/plan/MealSlotCard.tsx` — prep time shown with clock icon + bolder styling
+- `src/i18n/de.ts` — removed time budget keys, added plan delete keys
+- `src/api/mealPlans.ts` — `deleteMealPlansForDateRange` already existed, now used with `keepCompleted=false`
+
+### Current State
+- **Phase 2: DEPLOYED AND TESTED** — migration run, plan generation works, all slots fill correctly
+- **Debug panel still present** in PlanPage (shows after generating — should be removed in next session)
+- **38 recipes** in DB across 4 categories (breakfast=13, lunch=10, dinner=10, snack=15)
+
+### Planned Next (not yet implemented)
+Two usability improvements identified during testing:
+
+#### 1. Today Page: Undo meal completion
+- Accidentally marking a meal as "eaten" is irreversible
+- Need: Add `uncompleteMealPlan(id)` to `src/api/mealPlans.ts` — resets `is_completed`, `is_free_meal`, `free_meal_calories`, `free_meal_note`
+- Add "Rückgängig" (undo) button on completed meal cards in `MealCard.tsx`
+- Note: Undoing a free meal won't restore the original recipe (since `markFreeMeal` nulls `recipe_id`)
+
+#### 2. Recipe Detail: Cook Now + Add to Today's Plan
+- Currently no way to cook a recipe or add it to the plan from the recipe detail page
+- Need: "Jetzt kochen" floating button on `RecipeDetailPage.tsx` → navigates to `/cook/:id`
+- Need: "Zum heutigen Plan" item in the three-dot menu → shows meal-type picker → upserts into `meal_plans` for today
+- Uses existing `upsertMealPlans`, `MEAL_TYPES`, user's `meals_per_day` setting
+
+#### 3. Cleanup: Remove debug panel
+- Strip `debugLog` state + debug panel UI from `PlanPage.tsx`
+- Revert generator to return `PlanSlot[]` instead of `GeneratorResult`
+
+---
+
+## 2026-02-28 — Profile Page: Calorie History & Weight Tracking
+
+### What was done
+Expanded the Profile page from a bare settings form into a scrollable dashboard with three sections:
+
+#### 1. Weight Log Section (`WeightLogSection.tsx`)
+- Quick-entry form: date picker (defaults today) + weight input + save button
+- Line chart (Recharts) showing last 30 weight entries with orange trend line
+- Reference lines for start weight (gray dashed) and target weight (green dashed)
+- Recent entries list (last 5) with delete option
+- Uses existing `getWeightLog`, `logWeight`, `deleteWeightEntry` API functions
+
+#### 2. Calorie History Section (`CalorieHistorySection.tsx`)
+- Period toggle: 7 / 14 / 30 days
+- Bar chart with daily consumed calories, colored green (≤ target) or red (> target)
+- Orange dashed reference line at the calorie target
+- Summary stats below chart: average kcal/day, days under target, days over target
+- Fills in zero-calorie days for gaps in the range
+- Uses `getMealPlansForDateRange` + new `aggregateDailyCalories` helper
+
+#### 3. Settings (existing `SettingsForm`)
+- Moved into a card section at the bottom of the page
+- No functional changes
+
+### New Files Created
+- `src/lib/calorieHistory.ts` — `aggregateDailyCalories()` function, groups meal plans by date and sums completed calories
+- `src/components/profile/WeightLogSection.tsx` — weight entry + chart + recent list
+- `src/components/profile/CalorieHistorySection.tsx` — calorie bar chart + period toggle + stats
+
+### Files Modified
+- `src/pages/ProfilePage.tsx` — restructured into 3-section dashboard, loads user settings for weight reference lines
+- `src/lib/dateUtils.ts` — added `subDays()` and `formatDayMonth()` helpers
+- `src/i18n/de.ts` — added `profile.*`, `weight.*`, `calories.*` translation keys (~15 new keys)
+- `package.json` — added `recharts` dependency
+
+### Build Verification
+- TypeScript type-check: **0 errors**
+- Vite production build: **success**
+
+### Current Status
+- **Profile page: COMPLETE** with weight tracking + calorie history + settings
+- **Next step:** Test on phone after deploy
+
+---
