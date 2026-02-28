@@ -25,6 +25,7 @@ export const de = {
   'recipes.deleteConfirm': 'Möchtest du dieses Rezept wirklich löschen?',
   'recipes.cookNow': 'Jetzt kochen',
   'recipes.edit': 'Bearbeiten',
+  'recipes.addToPlan': 'Zum heutigen Plan',
 
   // Filters
   'filter.all': 'Alle',
@@ -120,6 +121,7 @@ export const de = {
   'today.freeMealTitle': 'Freie Mahlzeit',
   'today.freeMealCalories': 'Kalorien',
   'today.freeMealNote': 'Notiz (optional)',
+  'today.undo': 'Rückgängig',
 
   // Cooking
   'cooking.title': 'Kochmodus',

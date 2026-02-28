@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { t } from '../i18n'
 import type { MealPlanWithRecipe, UserSettings } from '../lib/types'
 import { getUserSettings } from '../api/userSettings'
-import { getMealPlansForDate, completeMealPlan, markFreeMeal } from '../api/mealPlans'
+import { getMealPlansForDate, completeMealPlan, markFreeMeal, uncompleteMealPlan } from '../api/mealPlans'
 import { toDateString } from '../lib/dateUtils'
 import { CalorieSummary } from '../components/today/CalorieSummary'
 import { MealCard } from '../components/today/MealCard'
@@ -39,6 +39,15 @@ export function TodayPage() {
   async function handleMarkEaten(plan: MealPlanWithRecipe) {
     try {
       await completeMealPlan(plan.id)
+      await loadData()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  async function handleUndo(plan: MealPlanWithRecipe) {
+    try {
+      await uncompleteMealPlan(plan.id)
       await loadData()
     } catch (err) {
       console.error(err)
@@ -109,6 +118,7 @@ export function TodayPage() {
                 }}
                 onMarkEaten={() => handleMarkEaten(plan)}
                 onFreeMeal={() => setFreeMealTarget(plan)}
+                onUndo={() => handleUndo(plan)}
               />
             ))}
           </div>

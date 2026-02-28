@@ -1,4 +1,4 @@
-import { Check, ChefHat, Clock, Utensils } from 'lucide-react'
+import { Check, ChefHat, Clock, Undo2, Utensils } from 'lucide-react'
 import type { MealPlanWithRecipe } from '../../lib/types'
 import { MEAL_TYPES } from '../../lib/constants'
 import { t } from '../../i18n'
@@ -8,9 +8,10 @@ interface MealCardProps {
   onCook: () => void
   onMarkEaten: () => void
   onFreeMeal: () => void
+  onUndo?: () => void
 }
 
-export function MealCard({ plan, onCook, onMarkEaten, onFreeMeal }: MealCardProps) {
+export function MealCard({ plan, onCook, onMarkEaten, onFreeMeal, onUndo }: MealCardProps) {
   const mealLabel = MEAL_TYPES.find((m) => m.value === plan.meal_type)?.label ?? plan.meal_type
 
   // Completed free meal
@@ -28,9 +29,16 @@ export function MealCard({ plan, onCook, onMarkEaten, onFreeMeal }: MealCardProp
               <div className="text-xs text-green-500 mt-0.5">{plan.free_meal_note}</div>
             )}
           </div>
-          {plan.free_meal_calories && (
-            <div className="text-sm font-bold text-green-600">{plan.free_meal_calories} kcal</div>
-          )}
+          <div className="flex items-center gap-2">
+            {plan.free_meal_calories && (
+              <div className="text-sm font-bold text-green-600">{plan.free_meal_calories} kcal</div>
+            )}
+            {onUndo && (
+              <button onClick={onUndo} className="p-1.5 text-green-400 hover:text-orange-500" title={t('today.undo')}>
+                <Undo2 size={16} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -57,6 +65,11 @@ export function MealCard({ plan, onCook, onMarkEaten, onFreeMeal }: MealCardProp
               <div className="text-xs text-green-500 mt-0.5">{plan.recipe.calories} kcal</div>
             )}
           </div>
+          {onUndo && (
+            <button onClick={onUndo} className="p-1.5 text-green-400 hover:text-orange-500" title={t('today.undo')}>
+              <Undo2 size={16} />
+            </button>
+          )}
         </div>
       </div>
     )

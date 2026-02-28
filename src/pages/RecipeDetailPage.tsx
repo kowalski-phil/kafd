@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus, MoreVertical, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus, MoreVertical, ThumbsDown, ThumbsUp, ChefHat, CalendarPlus } from 'lucide-react'
 import { t } from '../i18n'
 import { getRecipe, toggleFavorite, deleteRecipe, updateRecipe } from '../api/recipes'
 import { uploadRecipePhoto } from '../api/storage'
+import { upsertMealPlans } from '../api/mealPlans'
+import { toDateString } from '../lib/dateUtils'
 import { ServingConverter } from '../components/recipes/ServingConverter'
 import { IngredientList } from '../components/recipes/IngredientList'
 import { StepList } from '../components/recipes/StepList'
 import { CookbookSelect } from '../components/cookbooks/CookbookSelect'
 import { CategoryTagSelect } from '../components/recipes/CategoryTagSelect'
 import { convertServings, convertCalories } from '../lib/servingMath'
-import { CATEGORY_TAGS, INGREDIENT_CATEGORIES } from '../lib/constants'
-import type { Recipe, Ingredient, RecipeStep, CategoryTag, IngredientCategory } from '../lib/types'
+import { CATEGORY_TAGS, INGREDIENT_CATEGORIES, MEAL_TYPES } from '../lib/constants'
+import type { Recipe, Ingredient, RecipeStep, CategoryTag, IngredientCategory, MealType } from '../lib/types'
 
 /** Normalize German decimal comma to dot and parse as float */
 function parseDecimal(value: string): number {
@@ -46,6 +48,10 @@ export function RecipeDetailPage() {
   const [editIngredients, setEditIngredients] = useState<Ingredient[]>([])
   const [editIngredientAmounts, setEditIngredientAmounts] = useState<string[]>([])
   const [editSteps, setEditSteps] = useState<RecipeStep[]>([])
+
+  // Add to plan state
+  const [showMealPicker, setShowMealPicker] = useState(false)
+  const [addingToPlan, setAddingToPlan] = useState(false)
 
   // Photo replacement state
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null)
@@ -227,6 +233,30 @@ export function RecipeDetailPage() {
     navigate('/recipes')
   }
 
+  async function handleAddToPlan(mealType: MealType) {
+    if (!recipe) return
+    setAddingToPlan(true)
+    try {
+      await upsertMealPlans([{
+        date: toDateString(new Date()),
+        meal_type: mealType,
+        recipe_id: recipe.id,
+        servings: 1,
+        is_completed: false,
+        is_free_meal: false,
+        free_meal_calories: null,
+        free_meal_note: null,
+        is_meal_prep: false,
+        meal_prep_source_id: null,
+      }])
+      setShowMealPicker(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setAddingToPlan(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -294,6 +324,13 @@ export function RecipeDetailPage() {
                       >
                         <Pencil size={16} className="text-gray-400" />
                         {t('recipes.edit')}
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); setShowMealPicker(true) }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 active:bg-gray-50"
+                      >
+                        <CalendarPlus size={16} className="text-gray-400" />
+                        {t('recipes.addToPlan')}
                       </button>
                       <button
                         onClick={handleToggleExcluded}
@@ -642,9 +679,49 @@ export function RecipeDetailPage() {
           </div>
 
           {/* Steps */}
-          <div className="mb-6">
+          <div className="mb-24">
             <h2 className="text-lg font-semibold text-gray-700 mb-3">{t('recipes.steps')}</h2>
             <StepList steps={recipe.steps} />
+          </div>
+        </div>
+      )}
+
+      {/* Cook Now FAB — only in view mode */}
+      {!isEditing && recipe && (
+        <div className="fixed bottom-20 left-0 right-0 px-4 z-10">
+          <button
+            onClick={() => navigate(`/cook/${recipe.id}`)}
+            className="w-full py-3 bg-orange-500 text-white rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 shadow-lg"
+          >
+            <ChefHat size={18} />
+            {t('recipes.cookNow')}
+          </button>
+        </div>
+      )}
+
+      {/* Meal Type Picker Modal */}
+      {showMealPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={() => setShowMealPicker(false)}>
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('recipes.addToPlan')}</h2>
+            <div className="space-y-2">
+              {MEAL_TYPES.map((mt) => (
+                <button
+                  key={mt.value}
+                  onClick={() => handleAddToPlan(mt.value)}
+                  disabled={addingToPlan}
+                  className="w-full py-2.5 bg-gray-50 rounded-xl text-sm font-medium text-gray-700 active:bg-orange-50 disabled:opacity-50"
+                >
+                  {mt.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowMealPicker(false)}
+              className="w-full mt-3 py-2 text-sm text-gray-400 font-medium"
+            >
+              {t('general.cancel')}
+            </button>
           </div>
         </div>
       )}

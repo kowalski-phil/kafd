@@ -70,6 +70,19 @@ export async function completeMealPlan(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function uncompleteMealPlan(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('meal_plans')
+    .update({
+      is_completed: false,
+      is_free_meal: false,
+      free_meal_calories: null,
+      free_meal_note: null,
+    })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function markFreeMeal(
   id: string,
   calories: number,
