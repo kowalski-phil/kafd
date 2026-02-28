@@ -119,3 +119,18 @@ export interface WeightLogEntry {
   weight_kg: number
   created_at: string
 }
+
+export interface ShoppingListItem {
+  name: string
+  amount: number
+  unit: string
+  category: IngredientCategory
+  is_checked: boolean
+}
+
+export interface ShoppingList {
+  id: string
+  week_start: string
+  items: ShoppingListItem[]
+  created_at: string
+}

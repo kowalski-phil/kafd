@@ -339,3 +339,73 @@ Expanded the Profile page from a bare settings form into a scrollable dashboard 
 - **Next step:** Test on phone after deploy
 
 ---
+
+## 2026-02-28 — Phase 2 Carry-Over Fixes + Phase 3 Implementation
+
+### Phase 2 Carry-Over Fixes
+
+#### 1. Undo meal completion
+- Added `uncompleteMealPlan(id)` to `src/api/mealPlans.ts` — resets `is_completed`, `is_free_meal`, `free_meal_calories`, `free_meal_note`
+- Added undo button (↩) on completed meal cards in `MealCard.tsx` (both recipe and free meal variants)
+- Wired up in `TodayPage.tsx`
+
+#### 2. Cook Now + Add to Plan from recipe detail
+- Added floating "Jetzt kochen" button at bottom of `RecipeDetailPage.tsx` → navigates to `/cook/:id`
+- Added "Zum heutigen Plan" item in three-dot menu → opens meal type picker modal → upserts into `meal_plans` for today
+- Uses existing `upsertMealPlans`, `MEAL_TYPES`
+
+#### 3. Debug panel cleanup
+- Removed `debugLog` state, `showDebug` state, and debug panel UI from `PlanPage.tsx`
+- Generator result destructured without capturing `debugLog`
+
+### Phase 3 Implementation
+
+#### 1. Shopping List (`ShoppingPage.tsx`)
+- **Database:** `003_phase3_schema.sql` — `shopping_lists` table (week_start UNIQUE, items JSONB)
+- **Aggregation:** `shoppingAggregator.ts` — merges ingredients across all planned meals, groups by category, multiplies by servings, pre-checks pantry staples
+- **API:** `shoppingLists.ts` — `getShoppingList`, `upsertShoppingList`, `updateShoppingItems`
+- **UI:** Week navigation (matches plan page), generate/regenerate button, collapsible category sections with check-off, progress counter (X/Y erledigt), manual item add
+
+#### 2. Streak Counter
+- `streakCalculator.ts` — calculates consecutive days with ≥1 completed meal (looks back 90 days, tolerates today not yet having data by checking from yesterday)
+- Displayed prominently on Today page with 🔥 emoji and "X Tage in Folge"
+- Recalculated on every data load
+
+#### 3. Weekly Review (`WeeklyReviewSection.tsx`)
+- Added to Profile page between calorie history and settings
+- Week navigation with stats: days in budget (X/7), recipes cooked, average kcal/day, weight change for the week, streak length
+- Color-coded weight change (green for loss, red for gain)
+
+### New Files Created (7)
+```
+supabase/migrations/003_phase3_schema.sql
+src/api/shoppingLists.ts
+src/lib/shoppingAggregator.ts
+src/lib/streakCalculator.ts
+src/components/profile/WeeklyReviewSection.tsx
+```
+
+### Files Modified (8)
+```
+src/lib/types.ts — ShoppingListItem, ShoppingList types
+src/api/mealPlans.ts — uncompleteMealPlan function
+src/components/today/MealCard.tsx — undo button on completed cards
+src/pages/TodayPage.tsx — undo handler, streak display
+src/pages/RecipeDetailPage.tsx — Cook Now FAB, Add to Plan menu + modal
+src/pages/PlanPage.tsx — removed debug panel
+src/pages/ShoppingPage.tsx — full implementation (replaced placeholder)
+src/pages/ProfilePage.tsx — added WeeklyReviewSection
+src/i18n/de.ts — ~20 new keys (shopping, streak, review, undo, addToPlan)
+```
+
+### Build Verification
+- TypeScript type-check: **0 errors**
+- Vite production build: **success** (877 KB JS, 25 KB CSS)
+
+### Current Status
+- **Phase 3: CODE COMPLETE** — shopping list, streak counter, weekly review all implemented
+- **User needs to:** Run migration `003_phase3_schema.sql` in Supabase dashboard
+- **After migration:** Test shopping list generation, check-off, streak counter on phone
+- **Next step:** Phase 4 — Smart Features
+
+---

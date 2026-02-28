@@ -122,6 +122,8 @@ export const de = {
   'today.freeMealCalories': 'Kalorien',
   'today.freeMealNote': 'Notiz (optional)',
   'today.undo': 'Rückgängig',
+  'today.streakDay': 'Tag in Folge',
+  'today.streakDays': 'Tage in Folge',
 
   // Cooking
   'cooking.title': 'Kochmodus',
@@ -142,8 +144,13 @@ export const de = {
   'cooking.servings': 'Portionen',
   'cooking.close': 'Schließen',
 
-  // Placeholder pages
-  'shopping.placeholder': 'Die Einkaufsliste wird in Phase 3 verfügbar sein.',
+  // Shopping
+  'shopping.generate': 'Einkaufsliste erstellen',
+  'shopping.regenerate': 'Neu erstellen',
+  'shopping.generating': 'Wird erstellt...',
+  'shopping.empty': 'Erstelle einen Wochenplan und generiere die Einkaufsliste.',
+  'shopping.checked': 'erledigt',
+  'shopping.addItem': 'Artikel hinzufügen...',
 
   // Profile
   'profile.title': 'Profil',
@@ -164,4 +171,13 @@ export const de = {
   'calories.avgPerDay': 'Ø kcal/Tag',
   'calories.daysUnder': 'Tage im Ziel',
   'calories.daysOver': 'Tage drüber',
+
+  // Weekly review
+  'review.title': 'Wochenrückblick',
+  'review.daysInBudget': 'Tage im Budget',
+  'review.recipesCooked': 'Rezepte gekocht',
+  'review.avgCalories': 'Ø kcal/Tag',
+  'review.weightChange': 'Gewicht',
+  'review.streak': 'Tage in Folge',
+  'review.noData': 'Keine Daten für diese Woche',
 } as const

@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom'
 import { t } from '../i18n'
 import type { MealPlanWithRecipe, UserSettings } from '../lib/types'
 import { getUserSettings } from '../api/userSettings'
-import { getMealPlansForDate, completeMealPlan, markFreeMeal, uncompleteMealPlan } from '../api/mealPlans'
-import { toDateString } from '../lib/dateUtils'
+import { getMealPlansForDate, getMealPlansForDateRange, completeMealPlan, markFreeMeal, uncompleteMealPlan } from '../api/mealPlans'
+import { toDateString, subDays } from '../lib/dateUtils'
+import { calculateStreak } from '../lib/streakCalculator'
 import { CalorieSummary } from '../components/today/CalorieSummary'
 import { MealCard } from '../components/today/MealCard'
 import { FreeMealModal } from '../components/today/FreeMealModal'
@@ -16,17 +17,21 @@ export function TodayPage() {
   const [plans, setPlans] = useState<MealPlanWithRecipe[]>([])
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [loading, setLoading] = useState(true)
+  const [streak, setStreak] = useState(0)
   const [freeMealTarget, setFreeMealTarget] = useState<MealPlanWithRecipe | null>(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [s, p] = await Promise.all([
+      const streakStart = toDateString(subDays(new Date(), 90))
+      const [s, p, recentPlans] = await Promise.all([
         getUserSettings(),
         getMealPlansForDate(today),
+        getMealPlansForDateRange(streakStart, today),
       ])
       setSettings(s)
       setPlans(p)
+      setStreak(calculateStreak(recentPlans))
     } catch (err) {
       console.error(err)
     } finally {
@@ -101,7 +106,16 @@ export function TodayPage() {
       </div>
 
       <div className="px-4 py-4 space-y-4">
-        {/* Calorie Summary */}
+        {/* Streak + Calorie Summary */}
+        {streak > 0 && (
+          <div className="bg-orange-50 rounded-2xl px-4 py-3 border border-orange-100 flex items-center gap-3">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <span className="text-lg font-bold text-orange-600">{streak}</span>
+              <span className="text-sm text-orange-500 ml-1">{streak === 1 ? t('today.streakDay') : t('today.streakDays')}</span>
+            </div>
+          </div>
+        )}
         {plans.length > 0 && (
           <CalorieSummary target={target} planned={planned} consumed={consumed} />
         )}
