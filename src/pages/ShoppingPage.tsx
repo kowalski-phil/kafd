@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { RefreshCw, Loader2, Plus, ChevronDown, ChevronRight } from 'lucide-react'
+import { RefreshCw, Loader2, Plus, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 import { t } from '../i18n'
 import { getShoppingList, upsertShoppingList, updateShoppingItems } from '../api/shoppingLists'
 import { getMealPlansForDateRange } from '../api/mealPlans'
@@ -79,6 +79,17 @@ export function ShoppingPage() {
     const updated = [...list.items, newItem]
     setList({ ...list, items: updated })
     setNewItemName('')
+    try {
+      await updateShoppingItems(list.id, updated)
+    } catch {
+      // silently fail
+    }
+  }
+
+  async function handleDeleteItem(index: number) {
+    if (!list) return
+    const updated = list.items.filter((_, i) => i !== index)
+    setList({ ...list, items: updated })
     try {
       await updateShoppingItems(list.id, updated)
     } catch {
@@ -180,25 +191,32 @@ export function ShoppingPage() {
                   {!isCollapsed && (
                     <div className="border-t border-gray-50">
                       {entries.map(({ item, index }) => (
-                        <button
-                          key={index}
-                          onClick={() => handleToggleItem(index)}
-                          className="w-full px-4 py-2.5 flex items-center gap-3 active:bg-gray-50"
-                        >
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
-                            item.is_checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
-                          }`}>
-                            {item.is_checked && (
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
-                          </div>
-                          <span className={`flex-1 text-left text-sm ${item.is_checked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                            {item.amount > 0 && `${item.amount} ${item.unit} `}
-                            {item.name}
-                          </span>
-                        </button>
+                        <div key={index} className="flex items-center px-4 py-2.5">
+                          <button
+                            onClick={() => handleToggleItem(index)}
+                            className="flex-1 flex items-center gap-3 active:bg-gray-50 min-w-0"
+                          >
+                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                              item.is_checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                            }`}>
+                              {item.is_checked && (
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </div>
+                            <span className={`flex-1 text-left text-sm truncate ${item.is_checked ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                              {item.amount > 0 && `${item.amount} ${item.unit} `}
+                              {item.name}
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(index)}
+                            className="p-1.5 ml-1 text-gray-300 hover:text-red-500 flex-shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}

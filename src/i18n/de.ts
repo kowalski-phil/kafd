@@ -26,6 +26,8 @@ export const de = {
   'recipes.cookNow': 'Jetzt kochen',
   'recipes.edit': 'Bearbeiten',
   'recipes.addToPlan': 'Zum heutigen Plan',
+  'recipes.addToShoppingList': 'Zur Einkaufsliste',
+  'recipes.addedToShoppingList': 'Zur Einkaufsliste hinzugefügt',
 
   // Filters
   'filter.all': 'Alle',

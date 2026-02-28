@@ -44,6 +44,9 @@ A mobile-first PWA for weight loss using air fryer recipes. Digitizes recipes fr
 ## Project Log
 See `PROJECT_LOG.md` for detailed progress tracking.
 
+## Workflow Rules
+- **NEVER commit or push without explicit user instruction.** Do not interpret general task instructions as authorization to commit or push. Always ask or wait for the user to say "commit", "push", or similar. Committing and pushing is always a separate, explicit step.
+
 ## Conventions
 - All UI text in German
 - Ingredient categories: `fruits_vegetables`, `meat_fish`, `dairy`, `dry_goods`, `spices`, `other`

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus, MoreVertical, ThumbsDown, ThumbsUp, ChefHat, CalendarPlus } from 'lucide-react'
+import { ArrowLeft, Heart, Trash2, Clock, Flame, Pencil, Plus, Camera, ImagePlus, MoreVertical, ThumbsDown, ThumbsUp, ChefHat, CalendarPlus, ShoppingCart } from 'lucide-react'
 import { t } from '../i18n'
 import { getRecipe, toggleFavorite, deleteRecipe, updateRecipe } from '../api/recipes'
 import { uploadRecipePhoto } from '../api/storage'
 import { upsertMealPlans } from '../api/mealPlans'
-import { toDateString } from '../lib/dateUtils'
+import { addRecipeToShoppingList } from '../api/shoppingLists'
+import { toDateString, getWeekStart } from '../lib/dateUtils'
 import { ServingConverter } from '../components/recipes/ServingConverter'
 import { IngredientList } from '../components/recipes/IngredientList'
 import { StepList } from '../components/recipes/StepList'
@@ -52,6 +53,7 @@ export function RecipeDetailPage() {
   // Add to plan state
   const [showMealPicker, setShowMealPicker] = useState(false)
   const [addingToPlan, setAddingToPlan] = useState(false)
+  const [shoppingListAdded, setShoppingListAdded] = useState(false)
 
   // Photo replacement state
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null)
@@ -257,6 +259,18 @@ export function RecipeDetailPage() {
     }
   }
 
+  async function handleAddToShoppingList() {
+    if (!recipe) return
+    try {
+      const weekStart = toDateString(getWeekStart(new Date()))
+      await addRecipeToShoppingList(weekStart, recipe.ingredients)
+      setShoppingListAdded(true)
+      setTimeout(() => setShoppingListAdded(false), 2000)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -331,6 +345,13 @@ export function RecipeDetailPage() {
                       >
                         <CalendarPlus size={16} className="text-gray-400" />
                         {t('recipes.addToPlan')}
+                      </button>
+                      <button
+                        onClick={() => { setMenuOpen(false); handleAddToShoppingList() }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 active:bg-gray-50"
+                      >
+                        <ShoppingCart size={16} className="text-gray-400" />
+                        {t('recipes.addToShoppingList')}
                       </button>
                       <button
                         onClick={handleToggleExcluded}
@@ -683,6 +704,13 @@ export function RecipeDetailPage() {
             <h2 className="text-lg font-semibold text-gray-700 mb-3">{t('recipes.steps')}</h2>
             <StepList steps={recipe.steps} />
           </div>
+        </div>
+      )}
+
+      {/* Shopping list added toast */}
+      {shoppingListAdded && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-lg">
+          {t('recipes.addedToShoppingList')}
         </div>
       )}
 

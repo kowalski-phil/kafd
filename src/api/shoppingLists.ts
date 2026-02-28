@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { ShoppingList, ShoppingListItem } from '../lib/types'
+import type { ShoppingList, ShoppingListItem, Ingredient } from '../lib/types'
 
 export async function getShoppingList(weekStart: string): Promise<ShoppingList | null> {
   const { data, error } = await supabase
@@ -34,4 +34,39 @@ export async function updateShoppingItems(
     .update({ items })
     .eq('id', id)
   if (error) throw error
+}
+
+/** Add recipe ingredients to the current week's shopping list, merging duplicates */
+export async function addRecipeToShoppingList(
+  weekStart: string,
+  ingredients: Ingredient[]
+): Promise<void> {
+  const existing = await getShoppingList(weekStart)
+  const currentItems = existing?.items ?? []
+
+  // Merge: if same name+unit exists, add amounts; otherwise append
+  const merged = [...currentItems]
+  for (const ing of ingredients) {
+    if (!ing.name.trim()) continue
+    const key = `${ing.name.toLowerCase().trim()}|${ing.unit.toLowerCase().trim()}`
+    const existingIdx = merged.findIndex(
+      m => `${m.name.toLowerCase().trim()}|${m.unit.toLowerCase().trim()}` === key
+    )
+    if (existingIdx >= 0) {
+      merged[existingIdx] = {
+        ...merged[existingIdx],
+        amount: Math.round((merged[existingIdx].amount + ing.amount) * 10) / 10,
+      }
+    } else {
+      merged.push({
+        name: ing.name,
+        amount: Math.round(ing.amount * 10) / 10,
+        unit: ing.unit,
+        category: ing.category,
+        is_checked: false,
+      })
+    }
+  }
+
+  await upsertShoppingList(weekStart, merged)
 }
